@@ -6,13 +6,16 @@ MemPalace does not own canonical memory. It reads from a curated mirror of the a
 
 ---
 
+## Works With
+
+- It works alongside the default `memory-core` (dreaming) of openclaw
+- Works with the fork version of openclaw `auto-dream` 
+
 ## Architecture Role
 
 ```
 memory-core   → canonical promotion        → MEMORY.md
 Auto-Dream    → reflective consolidation   → LTMEMORY.md, procedures, episodes
-QMD           → semantic retrieval         → (read-only)
-LCM           → conversation continuity    → (read-only)
 MemPalace     → relation / timeline / wake-up overlay → (read-only)
 session-ret.  → raw forensic recovery      → (read-only)
 truth-rec.    → final claim guardrail      → control law
