@@ -46,8 +46,8 @@ def search_palace(query: str, palace: str, wing: str = None,
     effective_wing = wing or wing_cfg.get('default_wing')
 
     cmd = [
-        MEMPALACE_BIN, 'search', query,
-        '--palace', palace,
+        MEMPALACE_BIN, '--palace', palace,
+        'search', query,
         '--results', str(results),
     ]
 

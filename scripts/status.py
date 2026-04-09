@@ -61,7 +61,7 @@ def get_status(palace: str, sources: str) -> dict:
     now = datetime.now(tz=timezone.utc).isoformat()
 
     # Check palace status via CLI
-    cmd = [MEMPALACE_BIN, 'status', '--palace', palace]
+    cmd = [MEMPALACE_BIN, '--palace', palace, 'status']
 
     palace_status = None
     try:

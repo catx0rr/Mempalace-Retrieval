@@ -49,6 +49,15 @@ if [ -z "${SKILL_DIR:-}" ]; then
   python3 - <<'PY'
 import json, os, subprocess, sys
 
+HOME = os.path.expanduser("~")
+WORKSPACE = os.path.join(HOME, ".openclaw", "workspace")
+
+def normalize_root(root: str) -> str:
+    root = os.path.expanduser(root)
+    if os.path.isabs(root):
+        return root
+    return os.path.normpath(os.path.join(WORKSPACE, root))
+
 try:
     raw = subprocess.check_output(
         ["openclaw", "config", "get", "skills.load.extraDirs", "--json"],
@@ -59,7 +68,8 @@ except Exception:
     extra_dirs = []
 
 for root in extra_dirs:
-    candidate = os.path.join(root, "mempalace-retrieval", "SKILL.md")
+    normalized = normalize_root(root)
+    candidate = os.path.join(normalized, "mempalace-retrieval", "SKILL.md")
     if os.path.isfile(candidate):
         print(os.path.dirname(candidate))
         sys.exit(0)
@@ -265,8 +275,8 @@ If `LTMEMORY.md` does not exist yet, that is acceptable.
 Initialize MemPalace against the curated sources:
 
 ```bash
-mempalace init "$HOME/.openclaw/mempalace-sources/curated/" \
-  --palace "$HOME/.openclaw/mempalace/palace" --yes
+mempalace --palace "$HOME/.openclaw/mempalace/palace" init \
+  "$HOME/.openclaw/mempalace-sources/curated/" --yes
 ```
 
 This prepares the palace structure from the curated content.
@@ -328,10 +338,8 @@ This uses **OpenClaw Gateway cron**, not system cron.
 ### 10a. Resolve absolute paths for cron
 
 ```bash
-export MEMPALACE_PY="$HOME/.openclaw/venvs/mempalace/bin/python"
-export SYNC_CMD="$MEMPALACE_PY $SCRIPTS_DIR/sync_curated.py"
-export MINE_CMD="$MEMPALACE_PY $SCRIPTS_DIR/mine_curated.py"
-export STATUS_CMD="$MEMPALACE_PY $SCRIPTS_DIR/status.py"
+export VENV_PYTHON="$HOME/.openclaw/venvs/mempalace/bin/python"
+export SCRIPTS_DIR="$SKILL_DIR/scripts"
 ```
 
 ### 10b. Add the cron job
@@ -346,7 +354,8 @@ openclaw cron add \
   --session isolated \
   --tools exec \
   --no-deliver \
-  --message "Run the MemPalace maintenance sequence exactly as written.
+  --message "$(cat <<EOF
+Run the MemPalace maintenance sequence exactly as written.
 This is a deterministic maintenance task, not an analysis task.
 
 Rules:
@@ -357,17 +366,20 @@ Rules:
 - Do not summarize to the user.
 - Run each command in order and stop on first failure.
 - Treat this as internal maintenance only.
+- Do not substitute raw mempalace commands for wrapper scripts.
 
 Commands:
-1. $SYNC_CMD
-2. $MINE_CMD
-3. $STATUS_CMD
+1. $VENV_PYTHON $SCRIPTS_DIR/sync_curated.py
+2. $VENV_PYTHON $SCRIPTS_DIR/mine_curated.py
+3. $VENV_PYTHON $SCRIPTS_DIR/status.py
 
 Return a short plain-text maintenance result:
 - sync: ok|failed
 - mine: ok|failed
 - status: ok|failed
-- final: success|failed"
+- final: success|failed
+EOF
+)"
 ```
 
 ### Why this form
@@ -377,6 +389,7 @@ Return a short plain-text maintenance result:
 - **Venv python** — uses the same environment as the installed MemPalace CLI
 - **Internal-only run** — no user-facing delivery
 - **Task history exists** — Gateway cron provides monitoring and run history
+- **Wrapper-first enforcement** — cron uses the governed wrapper surface, not raw direct MemPalace substitution
 
 ---
 
@@ -430,4 +443,3 @@ These are optional cleanup targets if the copied skill repo includes development
 Do not remove:
 - `SKILL.md`
 - `scripts/`
-

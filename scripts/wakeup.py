@@ -42,7 +42,7 @@ def get_wakeup(palace: str, wing: str = None) -> dict:
     # Use profile default_wing if no explicit wing given
     effective_wing = wing or wing_cfg.get('default_wing')
 
-    cmd = [MEMPALACE_BIN, 'wake-up', '--palace', palace]
+    cmd = [MEMPALACE_BIN, '--palace', palace, 'wake-up']
 
     if effective_wing:
         cmd.extend(['--wing', effective_wing])

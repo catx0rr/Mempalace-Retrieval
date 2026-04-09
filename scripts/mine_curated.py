@@ -76,9 +76,9 @@ def run_mine(sources: str, palace: str, wing: str, dry_run: bool = False) -> dic
 
     # Build the mine command
     cmd = [
-        MEMPALACE_BIN, 'mine', sources,
+        MEMPALACE_BIN, '--palace', palace,
+        'mine', sources,
         '--wing', wing,
-        '--palace', palace,
     ]
 
     if dry_run:
