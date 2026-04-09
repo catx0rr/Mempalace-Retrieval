@@ -20,6 +20,18 @@ The skill may be installed in:
 
 The installation should therefore be **path-variable driven**.
 
+If the skill is installed in a categorized path such as:
+
+- `~/.openclaw/workspace/skills/memory/mempalace-retrieval`
+
+do not assume the parent workspace skill root will recursively load it.
+
+Validate the active skill roots with:
+
+```bash
+openclaw config get skills.load.extraDirs --json
+```
+
 If still unsure, **ask** the operator where he downloaded the skill. 
 
 ---
