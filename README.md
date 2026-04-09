@@ -14,11 +14,13 @@ MemPalace does not own canonical memory. It reads from a curated mirror of the a
 ## Architecture Role
 
 ```
-memory-core   → canonical promotion        → MEMORY.md
-Auto-Dream    → reflective consolidation   → LTMEMORY.md, procedures, episodes
-MemPalace     → relation / timeline / wake-up overlay → (read-only)
-session-ret.  → raw forensic recovery      → (read-only)
-truth-rec.    → final claim guardrail      → control law
+memory-core → canonical promotion        → MEMORY.md
+Auto-Dream → reflective consolidation   → LTMEMORY.md, procedures, episodes
+QMD → semantic retrieval         → (read-only)
+LCM → conversation continuity    → (read-only)
+MemPalace → relation / timeline / wake-up overlay → (read-only)
+session-retrieval → raw forensic recovery      → (read-only)
+truth-recovery → final claim guardrail      → control law
 ```
 
 MemPalace is **Layer 3** in the retrieval ladder. It complements — never replaces — the existing memory systems.
