@@ -5,13 +5,93 @@ Follow every step in order.
 
 **Prerequisites (must be complete before this runs):**
 - MemPalace installed and callable (`mempalace --help` works)
-- Skill repo at `~/.openclaw/workspace/skills/mempalace-retrieval/`
+- The `mempalace-retrieval` skill is installed somewhere in the agent’s skill roots
 - Directories created per [INSTALL.md](INSTALL.md)
-- At least one memory surface exists (MEMORY.md or LTMEMORY.md)
+- At least one memory surface exists (`MEMORY.md` or `LTMEMORY.md`)
+
+This setup must **not** assume the skill lives only under:
+
+- `~/.openclaw/workspace/skills/mempalace-retrieval/`
+
+The skill may instead be loaded from:
+- `~/.openclaw/workspace/skills/`
+- `~/.openclaw/workspace/.agents/skills/`
+- `~/.agents/skills/`
+- `~/.openclaw/skills/`
+- any configured `skills.load.extraDirs`
 
 ---
 
-## Step 0: Confirm Prerequisites
+## Step 0: Discover the Skill Location
+
+Before running setup, determine where the `mempalace-retrieval` skill is actually installed.
+
+### 0a. Try standard skill roots first
+
+```bash
+for root in \
+  "$HOME/.openclaw/workspace/skills" \
+  "$HOME/.openclaw/workspace/.agents/skills" \
+  "$HOME/.agents/skills" \
+  "$HOME/.openclaw/skills"
+do
+  if [ -f "$root/mempalace-retrieval/SKILL.md" ]; then
+    export SKILL_DIR="$root/mempalace-retrieval"
+    break
+  fi
+done
+```
+
+### 0b. If not found, check configured `extraDirs`
+
+```bash
+if [ -z "${SKILL_DIR:-}" ]; then
+  python3 - <<'PY'
+import json, os, subprocess, sys
+
+try:
+    raw = subprocess.check_output(
+        ["openclaw", "config", "get", "skills.load.extraDirs", "--json"],
+        text=True
+    ).strip()
+    extra_dirs = json.loads(raw) if raw else []
+except Exception:
+    extra_dirs = []
+
+for root in extra_dirs:
+    candidate = os.path.join(root, "mempalace-retrieval", "SKILL.md")
+    if os.path.isfile(candidate):
+        print(os.path.dirname(candidate))
+        sys.exit(0)
+
+sys.exit(1)
+PY
+fi
+```
+
+If the Python check prints a path, export it:
+
+```bash
+export SKILL_DIR="<PASTE_OUTPUT_HERE>"
+```
+
+### 0c. Fail if still unresolved
+
+```bash
+if [ -z "${SKILL_DIR:-}" ] || [ ! -f "$SKILL_DIR/SKILL.md" ]; then
+  echo "Could not locate mempalace-retrieval skill directory."
+  echo "Install the skill first or ensure skills.load.extraDirs includes its parent root."
+  exit 1
+fi
+
+export SCRIPTS_DIR="$SKILL_DIR/scripts"
+echo "Using SKILL_DIR=$SKILL_DIR"
+echo "Using SCRIPTS_DIR=$SCRIPTS_DIR"
+```
+
+---
+
+## Step 1: Confirm Prerequisites
 
 Verify the installation is ready:
 
@@ -20,18 +100,25 @@ Verify the installation is ready:
 mempalace --help
 
 # Skill repo exists
-ls skills/mempalace-retrieval/SKILL.md
+ls "$SKILL_DIR/SKILL.md"
+
+# Scripts exist
+ls "$SCRIPTS_DIR/sync_curated.py"
+ls "$SCRIPTS_DIR/mine_curated.py"
+ls "$SCRIPTS_DIR/status.py"
+ls "$SCRIPTS_DIR/search.py"
+ls "$SCRIPTS_DIR/wakeup.py"
 
 # Runtime directories exist
-ls -d ~/.openclaw/mempalace/
-ls -d ~/.openclaw/mempalace-sources/curated/
+ls -d "$HOME/.openclaw/mempalace/" || true
+ls -d "$HOME/.openclaw/mempalace-sources/curated/" || true
 ```
 
 If any of these fail, follow [INSTALL.md](INSTALL.md) first.
 
 ---
 
-## Step 1: Select Agent Profile
+## Step 2: Select Agent Profile
 
 **Check for pre-selected profile first:**
 
@@ -44,7 +131,7 @@ export MEMPALACE_PROFILE=business-employee
 export MEMPALACE_PROFILE=personal-assistant
 ```
 
-If `MEMPALACE_PROFILE` is not set, **ask the operator which profile to use:**
+If `MEMPALACE_PROFILE` is not set, ask the operator which profile to use:
 
 | Profile | File | Best for |
 |---------|------|----------|
@@ -53,26 +140,29 @@ If `MEMPALACE_PROFILE` is not set, **ask the operator which profile to use:**
 
 Read the selected profile to understand the recommended wing taxonomy and wake-up priorities.
 
-**This choice is persisted in Step 3.** It determines wake-up priorities and retrieval guidance.
+This choice is persisted in Step 4.
+It determines wake-up priorities and retrieval guidance.
+
 The live phase-one default wing remains `agent_memory` regardless of profile.
 Multi-wing profile-specific runtime is future work.
 
 ---
 
-## Step 2: Create Runtime Directories
+## Step 3: Create Runtime Directories
 
 ```bash
-mkdir -p ~/.openclaw/mempalace/{palace,agents,diaries,exports,cache}
+mkdir -p "$HOME/.openclaw/mempalace"/{palace,agents,diaries,exports,cache}
+mkdir -p "$HOME/.openclaw/mempalace-sources/curated"
 ```
 
 ---
 
-## Step 3: Create Configuration Files
+## Step 4: Create Configuration Files
 
-### 3a. Create `config.json`
+### 4a. Create `config.json`
 
 ```bash
-cat > ~/.openclaw/mempalace/config.json << EOF
+cat > "$HOME/.openclaw/mempalace/config.json" << EOF
 {
   "palace_path": "$HOME/.openclaw/mempalace/palace",
   "collection_name": "mempalace_drawers"
@@ -80,15 +170,14 @@ cat > ~/.openclaw/mempalace/config.json << EOF
 EOF
 ```
 
-### 3b. Create `wing_config.json`
+### 4b. Create `wing_config.json`
 
-Persist the profile selection from Step 1. If `MEMPALACE_PROFILE` is set, use its value
-to select the correct template below without prompting.
+Persist the profile selection from Step 2.
 
 **For business-employee profile** (`MEMPALACE_PROFILE=business-employee`):
 
 ```bash
-cat > ~/.openclaw/mempalace/wing_config.json << 'EOF'
+cat > "$HOME/.openclaw/mempalace/wing_config.json" << 'EOF'
 {
   "profile": "business-employee",
   "default_wing": "agent_memory",
@@ -115,7 +204,7 @@ EOF
 **For personal-assistant profile** (`MEMPALACE_PROFILE=personal-assistant`):
 
 ```bash
-cat > ~/.openclaw/mempalace/wing_config.json << 'EOF'
+cat > "$HOME/.openclaw/mempalace/wing_config.json" << 'EOF'
 {
   "profile": "personal-assistant",
   "default_wing": "agent_memory",
@@ -141,11 +230,13 @@ cat > ~/.openclaw/mempalace/wing_config.json << 'EOF'
 EOF
 ```
 
-### 3c. Create `identity.txt`
+### 4c. Create `identity.txt`
+
+Read the agent’s `IDENTITY.md` and replace `<AGENT_NAME>` with the real name.
 
 ```bash
-cat > ~/.openclaw/mempalace/identity.txt << 'EOF'
-I am an AI agent running on OpenClaw. I use MemPalace for relation-aware
+cat > "$HOME/.openclaw/mempalace/identity.txt" << 'EOF'
+I am <AGENT_NAME> running on this system. I use MemPalace for relation-aware
 memory retrieval, timeline queries, and wake-up context. My canonical memory
 lives in MEMORY.md (native memory-core) and LTMEMORY.md (Auto-Dream).
 MemPalace is my read-only retrieval overlay.
@@ -154,75 +245,77 @@ EOF
 
 ---
 
-## Step 4: Sync Curated Sources
+## Step 5: Sync Curated Sources
 
 Copy workspace memory surfaces to the curated mirror:
 
 ```bash
-python3 skills/mempalace-retrieval/scripts/sync_curated.py
+python3 "$SCRIPTS_DIR/sync_curated.py"
 ```
 
-Verify output shows synced files. If LTMEMORY.md doesn't exist yet
-(Auto-Dream hasn't run), that's fine — MEMORY.md alone is enough to start.
+Verify output shows synced files.
+
+If `LTMEMORY.md` does not exist yet, that is acceptable.
+`MEMORY.md` alone is enough to begin.
 
 ---
 
-## Step 5: Initialize Palace
+## Step 6: Initialize Palace
 
-Initialize MemPalace against the curated sources to prepare the palace structure:
+Initialize MemPalace against the curated sources:
 
 ```bash
-mempalace init ~/.openclaw/mempalace-sources/curated/ \
-  --palace ~/.openclaw/mempalace/palace --yes
+mempalace init "$HOME/.openclaw/mempalace-sources/curated/" \
+  --palace "$HOME/.openclaw/mempalace/palace" --yes
 ```
 
 This prepares the palace structure from the curated content.
 
 ---
 
-## Step 6: Mine Curated Sources
+## Step 7: Mine Curated Sources
 
-Index the curated memory into MemPalace's ChromaDB:
+Index the curated memory into MemPalace’s ChromaDB:
 
 ```bash
-python3 skills/mempalace-retrieval/scripts/mine_curated.py
+python3 "$SCRIPTS_DIR/mine_curated.py"
 ```
 
 ---
 
-## Step 7: Verify Installation
+## Step 8: Verify Installation
 
 ```bash
-python3 skills/mempalace-retrieval/scripts/status.py
+python3 "$SCRIPTS_DIR/status.py"
 ```
 
 Expected output:
-- Palace directory exists
+- palace directory exists
 - `config.json` and `wing_config.json` present
-- At least one curated source synced
-- Palace status shows indexed drawers
+- at least one curated source synced
+- palace status shows indexed drawers
 
 ---
 
-## Step 8: Test Retrieval
+## Step 9: Test Retrieval
 
-Search:
+### Search
 
 ```bash
-python3 skills/mempalace-retrieval/scripts/search.py --query "preferences"
+python3 "$SCRIPTS_DIR/search.py" --query "preferences"
 ```
 
-Wake-up:
+### Wake-up
 
 ```bash
-python3 skills/mempalace-retrieval/scripts/wakeup.py
+python3 "$SCRIPTS_DIR/wakeup.py"
 ```
 
 ---
 
-## Step 9: Set Up Sync Cron
+## Step 10: Set Up Gateway Cron
 
-MemPalace sync + mine runs as a **deterministic system cron**, staggered after Auto-Dream:
+MemPalace sync + mine runs as a deterministic scheduled task, staggered after Auto-Dream:
 
 | System | Schedule | Runs at | Purpose |
 |--------|----------|---------|---------|
@@ -230,67 +323,111 @@ MemPalace sync + mine runs as a **deterministic system cron**, staggered after A
 | Auto-Dream | `30 4,10,16,22 * * *` | 4:30 / 10:30 / 16:30 / 22:30 | Reflective consolidation |
 | **MemPalace** | `0 5,11,17,23 * * *` | **5:00 / 11:00 / 17:00 / 23:00** | Curated sync + mine |
 
-Add to system crontab. Replace `<AGENT_HOME>` with the actual home directory
-(e.g. `/home/mia`):
+This uses **OpenClaw Gateway cron**, not system cron.
+
+### 10a. Resolve absolute paths for cron
 
 ```bash
-# MemPalace curated sync + mine (runs after Auto-Dream)
-# Uses venv python, absolute paths, flock to prevent overlap, status after mine
-SHELL=/bin/bash
-HOME=<AGENT_HOME>
-
-0 5,11,17,23 * * * /usr/bin/flock -n <AGENT_HOME>/.openclaw/mempalace/cache/sync.lock /bin/bash -lc '\
-  <AGENT_HOME>/.openclaw/venvs/mempalace/bin/python <AGENT_HOME>/.openclaw/workspace/skills/mempalace-retrieval/scripts/sync_curated.py && \
-  <AGENT_HOME>/.openclaw/venvs/mempalace/bin/python <AGENT_HOME>/.openclaw/workspace/skills/mempalace-retrieval/scripts/mine_curated.py && \
-  <AGENT_HOME>/.openclaw/venvs/mempalace/bin/python <AGENT_HOME>/.openclaw/workspace/skills/mempalace-retrieval/scripts/status.py \
-' >> <AGENT_HOME>/.openclaw/mempalace/cache/sync.log 2>&1
+export MEMPALACE_PY="$HOME/.openclaw/venvs/mempalace/bin/python"
+export SYNC_CMD="$MEMPALACE_PY $SCRIPTS_DIR/sync_curated.py"
+export MINE_CMD="$MEMPALACE_PY $SCRIPTS_DIR/mine_curated.py"
+export STATUS_CMD="$MEMPALACE_PY $SCRIPTS_DIR/status.py"
 ```
 
-Why this form:
+### 10b. Add the cron job
 
-- **Absolute paths** — cron PATH is sparse; `~` and relative paths are unreliable
-- **Venv python** — ties execution to the same environment as the installed MemPalace CLI
-- **flock** — prevents overlapping runs if a previous cycle is still running
-- **status after mine** — gives a post-run health snapshot in the log
+Replace `Asia/Manila` if the agent uses a different local timezone.
+
+```bash
+openclaw cron add \
+  --name "MemPalace sync+mine" \
+  --cron "0 5,11,17,23 * * *" \
+  --tz "Asia/Manila" \
+  --session isolated \
+  --tools exec \
+  --no-deliver \
+  --message "Run the MemPalace maintenance sequence exactly as written.
+This is a deterministic maintenance task, not an analysis task.
+
+Rules:
+- Do not improvise.
+- Do not search for alternatives.
+- Do not rewrite paths.
+- Do not skip steps.
+- Do not summarize to the user.
+- Run each command in order and stop on first failure.
+- Treat this as internal maintenance only.
+
+Commands:
+1. $SYNC_CMD
+2. $MINE_CMD
+3. $STATUS_CMD
+
+Return a short plain-text maintenance result:
+- sync: ok|failed
+- mine: ok|failed
+- status: ok|failed
+- final: success|failed"
+```
+
+### Why this form
+
+- **Skill path is dynamic** — cron uses the resolved `SKILL_DIR` / `SCRIPTS_DIR`
+- **Absolute paths** — avoids sparse PATH issues
+- **Venv python** — uses the same environment as the installed MemPalace CLI
+- **Internal-only run** — no user-facing delivery
+- **Task history exists** — Gateway cron provides monitoring and run history
 
 ---
 
 ## Post-Setup Checklist
 
+- [ ] `SKILL_DIR` was resolved correctly
+- [ ] `SCRIPTS_DIR` was resolved correctly
 - [ ] Profile selected and `wing_config.json` created
 - [ ] `~/.openclaw/mempalace/palace/` exists with ChromaDB data
-- [ ] `~/.openclaw/mempalace/config.json` exists with correct palace_path
+- [ ] `~/.openclaw/mempalace/config.json` exists with correct palace path
 - [ ] `~/.openclaw/mempalace/wing_config.json` exists with correct profile
 - [ ] `~/.openclaw/mempalace/identity.txt` exists
-- [ ] `~/.openclaw/mempalace-sources/curated/` has at least MEMORY.md
+- [ ] `~/.openclaw/mempalace-sources/curated/` has at least `MEMORY.md`
 - [ ] `mempalace status --palace ~/.openclaw/mempalace/palace` shows indexed content
 - [ ] Search returns results
 - [ ] Wake-up generates context
-- [ ] Sync cron is scheduled
+- [ ] Gateway cron is scheduled
 
 ---
 
-## What's NOT Set Up Yet
+## What’s NOT Set Up Yet
 
 The following features are not enabled in this initial deployment:
 
-- Conversation mining (`convos/` stays empty)
-- Multi-wing mining (curated content mines into `agent_memory`; profile-specific wing routing is a future enhancement)
-- Specialist agent diaries
+- conversation mining (`convos/` stays empty)
+- multi-wing mining (curated content mines into `agent_memory`; profile-specific wing routing is future enhancement)
+- specialist agent diaries
 - AAAK compression
-- Knowledge graph queries
-- Auto-save hooks
-- Direct drawer creation
-- Write-back into workspace memory
+- knowledge graph queries
+- auto-save hooks
+- direct drawer creation
+- write-back into workspace memory
 
 The selected profile is persisted for metadata, wake-up priorities, and retrieval guidance.
-The live phase-one default wing remains `agent_memory`. Multi-wing profile-specific
-runtime will be added when curated ingestion and retrieval are proven stable.
+The live phase-one default wing remains `agent_memory`.
+Multi-wing profile-specific runtime will be added later, after curated ingestion and retrieval are proven stable.
+
+---
 
 ## Cleanup
-- [ ] .git
-- [ ] LICENSE
-- [ ] README.md
-- [ ] INSTALL.md
-- [ ] SETUP.md
-- [ ] profiles
+
+These are optional cleanup targets if the copied skill repo includes development-only files that should not remain in the deployed skill directory:
+
+- [ ] `.git`
+- [ ] `LICENSE`
+- [ ] `README.md`
+- [ ] `INSTALL.md`
+- [ ] `SETUP.md`
+- [ ] `profiles/`
+
+Do not remove:
+- `SKILL.md`
+- `scripts/`
+

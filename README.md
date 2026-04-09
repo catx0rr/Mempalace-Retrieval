@@ -11,18 +11,6 @@ MemPalace does not own canonical memory. It reads from a curated mirror of the a
 - It works alongside the default `memory-core` (dreaming) of openclaw
 - Works with the fork version of openclaw `auto-dream` 
 
-## Architecture Role
-
-```
-memory-core → canonical promotion        → MEMORY.md
-Auto-Dream → reflective consolidation   → LTMEMORY.md, procedures, episodes
-QMD → semantic retrieval         → (read-only)
-LCM → conversation continuity    → (read-only)
-MemPalace → relation / timeline / wake-up overlay → (read-only)
-session-retrieval → raw forensic recovery      → (read-only)
-truth-recovery → final claim guardrail      → control law
-```
-
 MemPalace is **Layer 3** in the retrieval ladder. It complements — never replaces — the existing memory systems.
 
 ---
@@ -35,9 +23,32 @@ Use MemPalace when the question is:
 - **Cross-domain** — "what bridges these projects/people/topics?"
 - **Wake-up worthy** — agent needs scoped context before answering
 
-Do NOT use MemPalace for simple facts (QMD), conversation continuity (LCM), or exact quotes (session-retrieval).
+Do NOT use MemPalace for simple facts, conversation continuity, or exact quotes.
 
 ---
+
+## Installation
+
+git clone on skills canonical path
+
+```bash
+git clone https://github.com/catx0rr/mempalace-retrieval.git \
+  ~/.openclaw/workspace/skills/mempalace-retrieval
+```
+
+or in extraDir: (example):
+```bash
+git clone https://github.com/catx0rr/mempalace-retrieval.git \
+  ~/.openclaw/workspace/skills/memory/mempalace-retrieval
+```
+
+Tell the agent:
+
+> Set up MemPalace retrieval. Read the installed `SETUP.md` in the `mempalace-retrieval` skill directory and follow every step.
+
+If both install and setup need to happen:
+
+> Install and set up MemPalace retrieval. Read the installed `INSTALL.md` first, then follow `SETUP.md`.
 
 ## Directory Layout
 
@@ -127,7 +138,7 @@ MemPalace is **read-only** in phase one.
 ## Dependencies
 
 - Python 3.9+
-- `mempalace` (`pip install mempalace`)
+- `mempalace` (`pipx install mempalace`)
 - OpenClaw agent with workspace at `~/.openclaw/workspace/`
 
 ---
