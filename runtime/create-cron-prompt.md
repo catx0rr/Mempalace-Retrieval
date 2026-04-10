@@ -45,13 +45,14 @@ If the file does not exist, stop. Run SETUP.md first or verify the skill install
 
 ## Step 3: Resolve Absolute Path
 
-Resolve the full absolute path to the recurring maintenance prompt:
+Resolve two absolute paths:
 
 ```
 SYNC_MINE_PATH = <resolved absolute path to $SKILL_ROOT/runtime/mempalace-sync-mine.md>
+WORKSPACE_PATH = <resolved absolute path to ~/.openclaw/workspace>
 ```
 
-This path will be baked into the cron payload. It must be a fully resolved absolute path —
+Both will be baked into the cron payload. They must be fully resolved absolute paths —
 no `~`, no `$SKILL_ROOT`, no `$HOME`, no placeholders.
 
 Example (your resolved path will differ):
@@ -84,10 +85,10 @@ Do NOT use `$SKILL_ROOT` or any variable — use the actual resolved path.
 ```
 Run MemPalace sync+mine.
 Read <SYNC_MINE_PATH> and follow every step strictly.
-Working directory: the workspace root.
+Working directory: <WORKSPACE_PATH>
 ```
 
-Where `<SYNC_MINE_PATH>` is replaced with the actual absolute path before cron creation.
+Where `<SYNC_MINE_PATH>` and `<WORKSPACE_PATH>` are replaced with the actual absolute paths resolved in Step 3.
 
 ### Example (illustrative — your paths will differ)
 
@@ -100,7 +101,7 @@ openclaw cron add \
   --no-deliver \
   --message "Run MemPalace sync+mine.
 Read /home/user/.openclaw/workspace/skills/mempalace-retrieval/runtime/mempalace-sync-mine.md and follow every step strictly.
-Working directory: the workspace root."
+Working directory: /home/user/.openclaw/workspace"
 ```
 
 ---
