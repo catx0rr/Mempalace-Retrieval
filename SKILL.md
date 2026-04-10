@@ -157,12 +157,12 @@ agent answers with better preload
 
 ## Operational cadence
 
-Sync + mine is deterministic and runs after Auto-Dream:
+Scheduled MemPalace maintenance is deterministic and delegated to
+`mempalace-sync-mine.md`. That prompt runs curated sync, curated mine,
+and status checks using wrapper scripts. Do not substitute raw MemPalace
+CLI commands for wrapper scripts.
 
-- memory-core -> 3:00 AM
-- Auto-Dream -> 4:30 / 10:30 / 16:30 / 22:30
-- MemPalace sync + mine -> 5:00 / 11:00 / 17:00 / 23:00
-
+Schedule: `0 5,11,17,23 * * *` (after Auto-Dream).
 Wake-up is **not** cron-based.
 
 ---

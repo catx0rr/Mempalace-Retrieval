@@ -43,6 +43,7 @@ def sync_curated(workspace: str, target: str, dry_run: bool = False) -> dict:
 
     if not ws.exists():
         return {
+            'ok': False,
             'error': f'Workspace not found: {workspace}',
             'timestamp': now,
             'synced_count': 0,
@@ -152,6 +153,7 @@ def sync_curated(workspace: str, target: str, dry_run: bool = False) -> dict:
             })
 
     return {
+        'ok': len(errors) == 0,
         'timestamp': now,
         'workspace': workspace,
         'target': target,

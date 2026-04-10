@@ -138,6 +138,16 @@ def get_status(palace: str, sources: str) -> dict:
     if errors:
         result['error'] = '; '.join(errors)
 
+    result['ok'] = len(errors) == 0
+    result['config_ready'] = dirs['config'] and dirs['wing_config']
+    result['curated_ready'] = dirs['curated_dir']
+    result['palace_ready'] = dirs['palace_dir'] and bool(
+        palace_status and palace_status.get('returncode') == 0
+    )
+    result['retrieval_ready'] = (
+        result['config_ready'] and result['curated_ready'] and result['palace_ready']
+    )
+
     return result
 
 

@@ -175,7 +175,9 @@ mkdir -p "$HOME/.openclaw/mempalace-sources/curated"
 cat > "$HOME/.openclaw/mempalace/config.json" << EOF
 {
   "palace_path": "$HOME/.openclaw/mempalace/palace",
-  "collection_name": "mempalace_drawers"
+  "collection_name": "mempalace_drawers",
+  "venv_python": "$HOME/.openclaw/venvs/mempalace/bin/python",
+  "curated_dir": "$HOME/.openclaw/mempalace-sources/curated"
 }
 EOF
 ```
@@ -323,7 +325,7 @@ python3 "$SCRIPTS_DIR/wakeup.py"
 
 ---
 
-## Step 10: Set Up Gateway Cron
+## Step 10: Set Up Scheduled Maintenance
 
 MemPalace sync + mine runs as a deterministic scheduled task, staggered after Auto-Dream:
 
@@ -333,63 +335,17 @@ MemPalace sync + mine runs as a deterministic scheduled task, staggered after Au
 | Auto-Dream | `30 4,10,16,22 * * *` | 4:30 / 10:30 / 16:30 / 22:30 | Reflective consolidation |
 | **MemPalace** | `0 5,11,17,23 * * *` | **5:00 / 11:00 / 17:00 / 23:00** | Curated sync + mine |
 
-This uses **OpenClaw Gateway cron**, not system cron.
+Resolve this skill directory as `SKILL_ROOT`, then read and execute:
 
-### 10a. Resolve absolute paths for cron
-
-```bash
-export VENV_PYTHON="$HOME/.openclaw/venvs/mempalace/bin/python"
-export SCRIPTS_DIR="$SKILL_DIR/scripts"
+```
+$SKILL_ROOT/create-cron-prompt.md
 ```
 
-### 10b. Add the cron job
+This is a **one-time task** that creates the recurring cron.
+The cron delegates all maintenance logic to `mempalace-sync-mine.md`.
 
-Replace `Asia/Manila` if the agent uses a different local timezone.
-
-```bash
-openclaw cron add \
-  --name "MemPalace sync+mine" \
-  --cron "0 5,11,17,23 * * *" \
-  --tz "Asia/Manila" \
-  --session isolated \
-  --tools exec \
-  --no-deliver \
-  --message "$(cat <<EOF
-Run the MemPalace maintenance sequence exactly as written.
-This is a deterministic maintenance task, not an analysis task.
-
-Rules:
-- Do not improvise.
-- Do not search for alternatives.
-- Do not rewrite paths.
-- Do not skip steps.
-- Do not summarize to the user.
-- Run each command in order and stop on first failure.
-- Treat this as internal maintenance only.
-- Do not substitute raw mempalace commands for wrapper scripts.
-
-Commands:
-1. $VENV_PYTHON $SCRIPTS_DIR/sync_curated.py
-2. $VENV_PYTHON $SCRIPTS_DIR/mine_curated.py
-3. $VENV_PYTHON $SCRIPTS_DIR/status.py
-
-Return a short plain-text maintenance result:
-- sync: ok|failed
-- mine: ok|failed
-- status: ok|failed
-- final: success|failed
-EOF
-)"
-```
-
-### Why this form
-
-- **Skill path is dynamic** — cron uses the resolved `SKILL_DIR` / `SCRIPTS_DIR`
-- **Absolute paths** — avoids sparse PATH issues
-- **Venv python** — uses the same environment as the installed MemPalace CLI
-- **Internal-only run** — no user-facing delivery
-- **Task history exists** — Gateway cron provides monitoring and run history
-- **Wrapper-first enforcement** — cron uses the governed wrapper surface, not raw direct MemPalace substitution
+Do not embed the full maintenance command sequence here.
+Do not create the cron inline — use the dedicated cron creation prompt.
 
 ---
 
@@ -399,7 +355,7 @@ EOF
 - [ ] `SCRIPTS_DIR` was resolved correctly
 - [ ] Profile selected and `wing_config.json` created
 - [ ] `~/.openclaw/mempalace/palace/` exists with ChromaDB data
-- [ ] `~/.openclaw/mempalace/config.json` exists with correct palace path
+- [ ] `~/.openclaw/mempalace/config.json` exists with correct palace path, venv_python, and curated_dir
 - [ ] `~/.openclaw/mempalace/wing_config.json` exists with correct profile
 - [ ] `~/.openclaw/mempalace/identity.txt` exists
 - [ ] `~/.openclaw/mempalace-sources/curated/` has at least `MEMORY.md`

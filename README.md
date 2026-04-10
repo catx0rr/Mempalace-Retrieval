@@ -27,20 +27,39 @@ Do NOT use MemPalace for simple facts, conversation continuity, or exact quotes.
 
 ---
 
+## Architecture
+
+```text
+INSTALL.md → SETUP.md → create-cron-prompt.md (run once) → cron → mempalace-sync-mine.md (recurring) → scripts/*.py
+```
+
+- `create-cron-prompt.md` = one-time cron creation/setup
+- `mempalace-sync-mine.md` = recurring runtime orchestrator (sync + mine + status + rich report)
+- `scripts/` = deterministic worker layer (JSON in/out, `ok` boolean contract)
+- `SKILL.md` = runtime contract / manual operator surface
+
+No hardcoded skill path assumption. Prompts resolve their own location at runtime, so the install location may vary.
+
+---
+
 ## Installation
 
-git clone on skills canonical path
+Install the skill under any workspace skill directory.
+
+Examples:
 
 ```bash
 git clone https://github.com/catx0rr/mempalace-retrieval.git \
   ~/.openclaw/workspace/skills/mempalace-retrieval
 ```
 
-or in extraDir: (example):
 ```bash
 git clone https://github.com/catx0rr/mempalace-retrieval.git \
-  ~/.openclaw/workspace/skills/memory/mempalace-retrieval
+  ~/.openclaw/workspace/skills/cognitive/mempalace-retrieval
 ```
+
+The exact install location may vary.
+Prompts resolve their own location at runtime, so no fixed skill path is required.
 
 Tell the agent:
 
@@ -72,10 +91,12 @@ If both install and setup need to happen:
 ├── convos/                         # (future)
 └── generated/                      # (future)
 
-~/.openclaw/workspace/skills/mempalace-retrieval/   # This skill
+~/.openclaw/workspace/skills/mempalace-retrieval/   # This skill (path varies)
 ├── SKILL.md                        # Runtime contract
 ├── INSTALL.md                      # Operator installation guide
 ├── SETUP.md                        # Agent first-time setup guide
+├── create-cron-prompt.md           # One-time cron creation prompt
+├── mempalace-sync-mine.md          # Recurring maintenance orchestrator
 ├── README.md                       # This file
 ├── profiles/
 │   ├── business-employee.md        # Business wing taxonomy
@@ -102,13 +123,11 @@ See each file for detailed step-by-step instructions.
 
 ## Operational Cadence
 
-Sync + mine runs on a deterministic system cron, staggered after Auto-Dream:
+Sync + mine runs on a deterministic cron (`0 5,11,17,23 * * *`), staggered after Auto-Dream.
+The cron delegates to `mempalace-sync-mine.md` which orchestrates the three wrapper scripts
+and produces a rich structured maintenance report.
 
-| System | Schedule | Purpose |
-|--------|----------|---------|
-| memory-core | `0 3 * * *` | Canonical promotion |
-| Auto-Dream | `30 4,10,16,22 * * *` | Reflective consolidation |
-| **MemPalace** | `0 5,11,17,23 * * *` | Curated sync + mine |
+See `create-cron-prompt.md` for cron setup. See `mempalace-sync-mine.md` for the recurring workflow.
 
 Wake-up is **not cron-based** — it fires situationally on cold starts, context switches, and relation/timeline-heavy questions.
 

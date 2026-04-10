@@ -49,6 +49,7 @@ def run_mine(sources: str, palace: str, wing: str, dry_run: bool = False) -> dic
 
     if not src.exists():
         return {
+            'ok': False,
             'error': f'Curated sources not found: {sources}',
             'timestamp': now,
         }
@@ -68,10 +69,12 @@ def run_mine(sources: str, palace: str, wing: str, dry_run: bool = False) -> dic
 
     if not available:
         return {
+            'ok': True,
             'timestamp': now,
             'sources': sources,
             'status': 'nothing_to_mine',
             'available': [],
+            'available_count': 0,
         }
 
     # Build the mine command
@@ -101,32 +104,43 @@ def run_mine(sources: str, palace: str, wing: str, dry_run: bool = False) -> dic
 
         if proc.returncode != 0:
             return {
+                'ok': False,
                 'error': f'mempalace mine failed (exit {proc.returncode})',
                 'timestamp': now,
                 'sources': sources,
                 'palace': palace,
                 'wing': wing,
+                'available_count': len(available),
                 'mine_results': results,
             }
 
     except subprocess.TimeoutExpired:
-        results.append({
-            'command': ' '.join(cmd),
+        return {
+            'ok': False,
             'error': 'timeout after 300s',
-        })
+            'timestamp': now,
+            'sources': sources,
+            'palace': palace,
+            'wing': wing,
+            'available_count': len(available),
+            'mine_results': [{'command': ' '.join(cmd), 'error': 'timeout after 300s'}],
+        }
     except FileNotFoundError:
         return {
+            'ok': False,
             'error': 'mempalace command not found — is it installed? (pip install mempalace)',
             'timestamp': now,
         }
 
     return {
+        'ok': not any(r.get('error') for r in results),
         'timestamp': now,
         'sources': sources,
         'palace': palace,
         'wing': wing,
         'dry_run': dry_run,
         'available_files': available,
+        'available_count': len(available),
         'mine_results': results,
     }
 
