@@ -351,8 +351,8 @@ Do not create the cron inline — use the dedicated cron creation prompt.
 
 ## Post-Setup Checklist
 
-- [ ] `SKILL_DIR` was resolved correctly
-- [ ] `SCRIPTS_DIR` was resolved correctly
+- [ ] `SKILL_ROOT` was resolved correctly
+- [ ] `SCRIPTS_DIR` (`$SKILL_ROOT/scripts`) was resolved correctly
 - [ ] Profile selected and `wing_config.json` created
 - [ ] `~/.openclaw/mempalace/palace/` exists with ChromaDB data
 - [ ] `~/.openclaw/mempalace/config.json` exists with correct palace path, venv_python, and curated_dir
