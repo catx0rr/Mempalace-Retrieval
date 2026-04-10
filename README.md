@@ -30,11 +30,11 @@ Do NOT use MemPalace for simple facts, conversation continuity, or exact quotes.
 ## Architecture
 
 ```text
-INSTALL.md → SETUP.md → create-cron-prompt.md (run once) → cron → mempalace-sync-mine.md (recurring) → scripts/*.py
+INSTALL.md → SETUP.md → runtime/create-cron-prompt.md (run once) → cron → runtime/mempalace-sync-mine.md (recurring) → scripts/*.py
 ```
 
-- `create-cron-prompt.md` = one-time cron creation/setup
-- `mempalace-sync-mine.md` = recurring runtime orchestrator (sync + mine + status + rich report)
+- `runtime/create-cron-prompt.md` = one-time cron creation/setup
+- `runtime/mempalace-sync-mine.md` = recurring runtime orchestrator (sync + mine + status + rich report)
 - `scripts/` = deterministic worker layer (JSON in/out, `ok` boolean contract)
 - `SKILL.md` = runtime contract / manual operator surface
 
@@ -95,8 +95,9 @@ If both install and setup need to happen:
 ├── SKILL.md                        # Runtime contract
 ├── INSTALL.md                      # Operator installation guide
 ├── SETUP.md                        # Agent first-time setup guide
-├── create-cron-prompt.md           # One-time cron creation prompt
-├── mempalace-sync-mine.md          # Recurring maintenance orchestrator
+├── runtime/
+│   ├── create-cron-prompt.md       # One-time cron creation prompt
+│   └── mempalace-sync-mine.md      # Recurring maintenance orchestrator
 ├── README.md                       # This file
 ├── profiles/
 │   ├── business-employee.md        # Business wing taxonomy
@@ -124,10 +125,10 @@ See each file for detailed step-by-step instructions.
 ## Operational Cadence
 
 Sync + mine runs on a deterministic cron (`0 5,11,17,23 * * *`), staggered after Auto-Dream.
-The cron delegates to `mempalace-sync-mine.md` which orchestrates the three wrapper scripts
+The cron delegates to `runtime/mempalace-sync-mine.md` which orchestrates the three wrapper scripts
 and produces a rich structured maintenance report.
 
-See `create-cron-prompt.md` for cron setup. See `mempalace-sync-mine.md` for the recurring workflow.
+See `runtime/create-cron-prompt.md` for cron setup. See `runtime/mempalace-sync-mine.md` for the recurring workflow.
 
 Wake-up is **not cron-based** — it fires situationally on cold starts, context switches, and relation/timeline-heavy questions.
 

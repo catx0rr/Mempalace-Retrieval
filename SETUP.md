@@ -338,11 +338,11 @@ MemPalace sync + mine runs as a deterministic scheduled task, staggered after Au
 Resolve this skill directory as `SKILL_ROOT`, then read and execute:
 
 ```
-$SKILL_ROOT/create-cron-prompt.md
+$SKILL_ROOT/runtime/create-cron-prompt.md
 ```
 
 This is a **one-time task** that creates the recurring cron.
-The cron delegates all maintenance logic to `mempalace-sync-mine.md`.
+The cron delegates all maintenance logic to `runtime/mempalace-sync-mine.md`.
 
 Do not embed the full maintenance command sequence here.
 Do not create the cron inline — use the dedicated cron creation prompt.

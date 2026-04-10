@@ -25,10 +25,10 @@ You MUST follow these rules exactly:
 
 ## Step 1: Resolve SKILL_ROOT
 
-This file's own directory is the skill root.
+This file lives inside `runtime/`. The skill root is the parent directory.
 
 ```
-SKILL_ROOT = <absolute path of the directory containing this file>
+SKILL_ROOT = <absolute path of the parent directory of runtime/>
 SCRIPTS_DIR = $SKILL_ROOT/scripts
 ```
 

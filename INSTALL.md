@@ -53,7 +53,7 @@ Choose where the `mempalace-retrieval` skill will live.
 ### Option A — default workspace skills
 
 ```bash
-export SKILL_ROOT="$HOME/.openclaw/workspace/skills"
+export SKILL_PARENT="$HOME/.openclaw/workspace/skills"
 ```
 
 ### Option B — shared skill pack loaded through `extraDirs`
@@ -61,23 +61,23 @@ export SKILL_ROOT="$HOME/.openclaw/workspace/skills"
 Example category root:
 
 ```bash
-export SKILL_ROOT="$HOME/.openclaw/skills-pack/cognitive"
+export SKILL_PARENT="$HOME/.openclaw/skills-pack/cognitive"
 ```
 
 If you use `extraDirs`, the parent root should contain the skill directory directly:
 
 ```text
-$SKILL_ROOT/
+$SKILL_PARENT/
 └── mempalace-retrieval/
 ```
 
-Do **not** point `SKILL_ROOT` at a repo root that requires undocumented recursive discovery.
+Do **not** point `SKILL_PARENT` at a repo root that requires undocumented recursive discovery.
 
 Now derive the final skill path:
 
 ```bash
-export SKILL_DIR="$SKILL_ROOT/mempalace-retrieval"
-mkdir -p "$SKILL_ROOT"
+export SKILL_ROOT="$SKILL_PARENT/mempalace-retrieval"
+mkdir -p "$SKILL_PARENT"
 ```
 
 ---
@@ -85,13 +85,13 @@ mkdir -p "$SKILL_ROOT"
 ## Step 1: Install the Retrieval Skill
 
 ```bash
-git clone https://github.com/catx0rr/mempalace-retrieval.git "$SKILL_DIR"
+git clone https://github.com/catx0rr/mempalace-retrieval.git "$SKILL_ROOT"
 ```
 
 Verify the skill exists:
 
 ```bash
-ls "$SKILL_DIR/SKILL.md"
+ls "$SKILL_ROOT/SKILL.md"
 ```
 
 ---
@@ -104,7 +104,7 @@ If you installed into a shared skill pack root, register that root with OpenClaw
 
 ```bash
 openclaw config set skills.load.extraDirs "[
-  \"$SKILL_ROOT\"
+  \"$SKILL_PARENT\"
 ]" --strict-json
 ```
 
@@ -200,7 +200,7 @@ ln -sf "$HOME/.openclaw/venvs/mempalace/bin/mempalace" "$HOME/.local/bin/mempala
 ls -la "$HOME/.openclaw/venvs/mempalace/bin/" | grep mempalace || true
 
 # Check skill exists at chosen location
-ls "$SKILL_DIR/SKILL.md"
+ls "$SKILL_ROOT/SKILL.md"
 ```
 
 ---
@@ -219,8 +219,8 @@ ls "$SKILL_DIR/SKILL.md"
 
 ## Post-Install Checklist
 
-- [ ] `SKILL_ROOT` was chosen correctly
-- [ ] `SKILL_DIR` exists with `SKILL.md`
+- [ ] `SKILL_PARENT` was chosen correctly
+- [ ] `SKILL_ROOT` exists with `SKILL.md`
 - [ ] `~/.openclaw/src/mempalace/` exists (upstream clone)
 - [ ] `~/.openclaw/venvs/mempalace/` exists (virtualenv)
 - [ ] `mempalace --help` works from PATH
