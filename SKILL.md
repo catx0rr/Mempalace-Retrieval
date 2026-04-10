@@ -162,6 +162,8 @@ Scheduled MemPalace maintenance is deterministic and delegated to
 and status checks using wrapper scripts. Do not substitute raw MemPalace
 CLI commands for wrapper scripts.
 
+One-time cron setup is handled by `create-cron-prompt.md`.
+
 Schedule: `0 5,11,17,23 * * *` (after Auto-Dream).
 Wake-up is **not** cron-based.
 

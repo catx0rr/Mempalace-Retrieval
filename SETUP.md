@@ -36,7 +36,7 @@ for root in \
   "$HOME/.openclaw/skills"
 do
   if [ -f "$root/mempalace-retrieval/SKILL.md" ]; then
-    export SKILL_DIR="$root/mempalace-retrieval"
+    export SKILL_ROOT="$root/mempalace-retrieval"
     break
   fi
 done
@@ -45,7 +45,7 @@ done
 ### 0b. If not found, check configured `extraDirs`
 
 ```bash
-if [ -z "${SKILL_DIR:-}" ]; then
+if [ -z "${SKILL_ROOT:-}" ]; then
   python3 - <<'PY'
 import json, os, subprocess, sys
 
@@ -82,20 +82,20 @@ fi
 If the Python check prints a path, export it:
 
 ```bash
-export SKILL_DIR="<PASTE_OUTPUT_HERE>"
+export SKILL_ROOT="<PASTE_OUTPUT_HERE>"
 ```
 
 ### 0c. Fail if still unresolved
 
 ```bash
-if [ -z "${SKILL_DIR:-}" ] || [ ! -f "$SKILL_DIR/SKILL.md" ]; then
+if [ -z "${SKILL_ROOT:-}" ] || [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   echo "Could not locate mempalace-retrieval skill directory."
   echo "Install the skill first or ensure skills.load.extraDirs includes its parent root."
   exit 1
 fi
 
-export SCRIPTS_DIR="$SKILL_DIR/scripts"
-echo "Using SKILL_DIR=$SKILL_DIR"
+export SCRIPTS_DIR="$SKILL_ROOT/scripts"
+echo "Using SKILL_ROOT=$SKILL_ROOT"
 echo "Using SCRIPTS_DIR=$SCRIPTS_DIR"
 ```
 
@@ -110,7 +110,7 @@ Verify the installation is ready:
 mempalace --help
 
 # Skill repo exists
-ls "$SKILL_DIR/SKILL.md"
+ls "$SKILL_ROOT/SKILL.md"
 
 # Scripts exist
 ls "$SCRIPTS_DIR/sync_curated.py"
